@@ -1,0 +1,6 @@
+@ServicoOportunidades_HostAddress = http://localhost:5237
+
+GET {{ServicoOportunidades_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
