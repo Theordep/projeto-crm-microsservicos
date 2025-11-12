@@ -54,21 +54,21 @@ Abra 3 terminais separados e execute cada serviço:
 
 **Terminal 1 - ServicoUsuarios:**
 ```bash
-cd ServicoUsuarios\ServicoUsuarios
+cd ServicoUsuarios
 dotnet run
 ```
 Acesse: http://localhost:5001/swagger
 
 **Terminal 2 - ServicoClientes:**
 ```bash
-cd ServicoUsuarios\ServicoClientes\ServicoClientes
+cd ServicoClientes
 dotnet run
 ```
 Acesse: http://localhost:5002/swagger
 
 **Terminal 3 - ServicoOportunidades:**
 ```bash
-cd ServicoUsuarios\ServicoClientes\ServicoOportunidades\ServicoOportunidades
+cd ServicoOportunidades
 dotnet run
 ```
 Acesse: http://localhost:5003/swagger
@@ -157,15 +157,15 @@ As migrations são aplicadas **automaticamente** quando você executa os serviç
 **Criar nova migration:**
 ```bash
 # Para ServicoUsuarios
-cd ServicoUsuarios\ServicoUsuarios
+cd ServicoUsuarios
 dotnet ef migrations add NomeDaMigration
 
 # Para ServicoClientes
-cd ServicoUsuarios\ServicoClientes\ServicoClientes
+cd ServicoClientes
 dotnet ef migrations add NomeDaMigration
 
 # Para ServicoOportunidades
-cd ServicoUsuarios\ServicoClientes\ServicoOportunidades\ServicoOportunidades
+cd ServicoOportunidades
 dotnet ef migrations add NomeDaMigration
 ```
 
