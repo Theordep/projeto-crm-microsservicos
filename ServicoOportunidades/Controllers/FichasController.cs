@@ -62,6 +62,20 @@ namespace ServicoOportunidades.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("cliente/{clienteId}/cancelar")]
+        public async Task<IActionResult> CancelarFichasPorCliente(int clienteId)
+        {
+            try
+            {
+                var fichasCanceladas = await _fichaService.CancelarFichasPorClienteAsync(clienteId);
+                return Ok(new { mensagem = $"{fichasCanceladas} ficha(s) cancelada(s) com sucesso", fichasCanceladas });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
 

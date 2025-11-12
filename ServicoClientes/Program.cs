@@ -13,8 +13,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ClientesContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// HttpClient para integração com outros serviços
+builder.Services.AddHttpClient<IntegracaoService>();
+
 // Services
 builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IntegracaoService>();
 
 var app = builder.Build();
 

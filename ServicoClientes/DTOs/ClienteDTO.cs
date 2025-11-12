@@ -6,6 +6,7 @@ namespace ServicoClientes.DTOs
         public string NomeRazaoSocial { get; set; } = string.Empty;
         public string CpfCnpj { get; set; } = string.Empty;
         public int RepresentanteId { get; set; }
+        public string? NomeRepresentante { get; set; }
         public string StatusCliente { get; set; } = string.Empty;
     }
 

@@ -146,6 +146,27 @@ namespace ServicoOportunidades.Services
                 AreaM2 = ficha.AreaM2
             };
         }
+
+        public async Task<int> CancelarFichasPorClienteAsync(int clienteId)
+        {
+            var fichas = await _context.Fichas
+                .Where(f => f.ClienteId == clienteId && f.StatusFicha != "Cancelado" && f.StatusFicha != "Vendido")
+                .ToListAsync();
+
+            int fichasCanceladas = 0;
+            foreach (var ficha in fichas)
+            {
+                ficha.StatusFicha = "Cancelado";
+                fichasCanceladas++;
+            }
+
+            if (fichasCanceladas > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return fichasCanceladas;
+        }
     }
 }
 

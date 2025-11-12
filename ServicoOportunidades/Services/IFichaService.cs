@@ -8,6 +8,7 @@ namespace ServicoOportunidades.Services
         Task<FichaDTO?> ObterFichaPorIdAsync(int id);
         Task<List<FichaDTO>> ListarFichasAsync();
         Task<FichaDTO?> AtualizarStatusAsync(int id, AtualizarStatusFichaDTO dto);
+        Task<int> CancelarFichasPorClienteAsync(int clienteId);
     }
 }
 
