@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ServicoClientes.DTOs;
+using ServicoClientes.Data;
 using ServicoClientes.Services;
 
 namespace ServicoClientes.Controllers
@@ -9,10 +11,12 @@ namespace ServicoClientes.Controllers
     public class ClientesController : ControllerBase
     {
         private readonly IClienteService _clienteService;
+        private readonly ClientesContext _context;
 
-        public ClientesController(IClienteService clienteService)
+        public ClientesController(IClienteService clienteService, ClientesContext context)
         {
             _clienteService = clienteService;
+            _context = context;
         }
 
         [HttpPost]
@@ -56,6 +60,57 @@ namespace ServicoClientes.Controllers
                     return NotFound();
 
                 return Ok(cliente);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            try
+            {
+                var totalClientes = await _context.Clientes.CountAsync();
+                var clientesAtivos = await _context.Clientes.CountAsync(c => c.StatusCliente == "Ativo");
+                var clientesProspect = await _context.Clientes.CountAsync(c => c.StatusCliente == "Prospect");
+
+                var clientesPorRepresentante = await _context.Clientes
+                    .GroupBy(c => c.RepresentanteId)
+                    .Select(g => new
+                    {
+                        representanteId = g.Key,
+                        quantidade = g.Count()
+                    })
+                    .OrderByDescending(x => x.quantidade)
+                    .Take(5)
+                    .ToListAsync();
+
+                var clientesRecentes = clientesAtivos;
+
+                var taxaConversao = totalClientes > 0
+                    ? Math.Round((double)clientesAtivos / totalClientes * 100, 2)
+                    : 0;
+
+                var dashboard = new
+                {
+                    resumo = new
+                    {
+                        total = totalClientes,
+                        ativos = clientesAtivos,
+                        prospects = clientesProspect,
+                        taxaConversao = taxaConversao
+                    },
+                    topRepresentantes = clientesPorRepresentante,
+                    porStatus = new
+                    {
+                        ativo = clientesAtivos,
+                        prospect = clientesProspect
+                    }
+                };
+
+                return Ok(dashboard);
             }
             catch (Exception ex)
             {
