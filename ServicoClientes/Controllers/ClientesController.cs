@@ -72,12 +72,10 @@ namespace ServicoClientes.Controllers
         {
             try
             {
-                // Totalizadores
                 var totalClientes = await _context.Clientes.CountAsync();
                 var clientesAtivos = await _context.Clientes.CountAsync(c => c.StatusCliente == "Ativo");
                 var clientesProspect = await _context.Clientes.CountAsync(c => c.StatusCliente == "Prospect");
 
-                // Clientes por representante (Top 5)
                 var clientesPorRepresentante = await _context.Clientes
                     .GroupBy(c => c.RepresentanteId)
                     .Select(g => new
@@ -89,11 +87,8 @@ namespace ServicoClientes.Controllers
                     .Take(5)
                     .ToListAsync();
 
-                // Clientes cadastrados nos últimos 7 dias
-                // Nota: Como não temos campo de data, usaremos contagem total
                 var clientesRecentes = clientesAtivos;
 
-                // Taxa de conversão
                 var taxaConversao = totalClientes > 0
                     ? Math.Round((double)clientesAtivos / totalClientes * 100, 2)
                     : 0;

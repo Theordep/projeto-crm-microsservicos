@@ -55,12 +55,10 @@ namespace ServicoUsuarios.Controllers
         {
             try
             {
-                // Totalizadores
                 var totalUsuarios = await _context.Usuarios.CountAsync();
                 var usuariosRepresentantes = await _context.Usuarios.CountAsync(u => u.TipoPerfil == "Representante");
                 var usuariosComercial = await _context.Usuarios.CountAsync(u => u.TipoPerfil == "Comercial");
 
-                // Distribuição por perfil
                 var porPerfil = new
                 {
                     representante = usuariosRepresentantes,

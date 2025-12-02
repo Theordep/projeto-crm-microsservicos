@@ -86,14 +86,12 @@ namespace ServicoOportunidades.Controllers
         {
             try
             {
-                // Totalizadores
                 var totalFichas = await _context.Fichas.CountAsync();
                 var fichasVendidas = await _context.Fichas.CountAsync(f => f.StatusFicha == "Vendido");
                 var fichasEmCadastro = await _context.Fichas.CountAsync(f => f.StatusFicha == "Em Cadastro");
                 var fichasEmAnalise = await _context.Fichas.CountAsync(f => f.StatusFicha == "Em Análise");
                 var fichasCanceladas = await _context.Fichas.CountAsync(f => f.StatusFicha == "Cancelado");
 
-                // Fichas por representante (Top 5)
                 var fichasPorRepresentante = await _context.Fichas
                     .GroupBy(f => f.RepresentanteId)
                     .Select(g => new
@@ -106,22 +104,18 @@ namespace ServicoOportunidades.Controllers
                     .Take(5)
                     .ToListAsync();
 
-                // Taxa de fechamento (vendidas / total)
                 var taxaFechamento = totalFichas > 0
                     ? Math.Round((double)fichasVendidas / totalFichas * 100, 2)
                     : 0;
 
-                // Valor total estimado
                 var valorTotalEstimado = await _context.Fichas
                     .Where(f => f.ValorEstimado.HasValue)
                     .SumAsync(f => f.ValorEstimado) ?? 0;
 
-                // Valor de fichas vendidas
                 var valorVendido = await _context.Fichas
                     .Where(f => f.StatusFicha == "Vendido" && f.ValorEstimado.HasValue)
                     .SumAsync(f => f.ValorEstimado) ?? 0;
 
-                // Distribuição por status
                 var porStatus = new
                 {
                     emCadastro = fichasEmCadastro,
