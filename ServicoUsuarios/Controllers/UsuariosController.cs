@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ServicoUsuarios.DTOs;
+using ServicoUsuarios.Data;
 using ServicoUsuarios.Services;
 
 namespace ServicoUsuarios.Controllers
@@ -9,10 +11,12 @@ namespace ServicoUsuarios.Controllers
     public class UsuariosController : ControllerBase
     {
         private readonly IUsuarioService _usuarioService;
+        private readonly UsuariosContext _context;
 
-        public UsuariosController(IUsuarioService usuarioService)
+        public UsuariosController(IUsuarioService usuarioService, UsuariosContext context)
         {
             _usuarioService = usuarioService;
+            _context = context;
         }
 
         [HttpPost]
@@ -44,6 +48,47 @@ namespace ServicoUsuarios.Controllers
         {
             var usuarios = await _usuarioService.ListarUsuariosAsync();
             return Ok(usuarios);
+        }
+
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            try
+            {
+                // Totalizadores
+                var totalUsuarios = await _context.Usuarios.CountAsync();
+                var usuariosRepresentantes = await _context.Usuarios.CountAsync(u => u.TipoPerfil == "Representante");
+                var usuariosComercial = await _context.Usuarios.CountAsync(u => u.TipoPerfil == "Comercial");
+
+                // Distribuição por perfil
+                var porPerfil = new
+                {
+                    representante = usuariosRepresentantes,
+                    comercial = usuariosComercial
+                };
+
+                var dashboard = new
+                {
+                    resumo = new
+                    {
+                        total = totalUsuarios,
+                        representantes = usuariosRepresentantes,
+                        comerciais = usuariosComercial
+                    },
+                    porPerfil = porPerfil,
+                    percentualPorPerfil = new
+                    {
+                        representante = totalUsuarios > 0 ? Math.Round((double)usuariosRepresentantes / totalUsuarios * 100, 2) : 0,
+                        comercial = totalUsuarios > 0 ? Math.Round((double)usuariosComercial / totalUsuarios * 100, 2) : 0
+                    }
+                };
+
+                return Ok(dashboard);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

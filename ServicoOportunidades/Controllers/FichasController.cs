@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ServicoOportunidades.DTOs;
+using ServicoOportunidades.Data;
 using ServicoOportunidades.Services;
 
 namespace ServicoOportunidades.Controllers
@@ -9,10 +11,12 @@ namespace ServicoOportunidades.Controllers
     public class FichasController : ControllerBase
     {
         private readonly IFichaService _fichaService;
+        private readonly OportunidadesContext _context;
 
-        public FichasController(IFichaService fichaService)
+        public FichasController(IFichaService fichaService, OportunidadesContext context)
         {
             _fichaService = fichaService;
+            _context = context;
         }
 
         [HttpPost]
@@ -70,6 +74,84 @@ namespace ServicoOportunidades.Controllers
             {
                 var fichasCanceladas = await _fichaService.CancelarFichasPorClienteAsync(clienteId);
                 return Ok(new { mensagem = $"{fichasCanceladas} ficha(s) cancelada(s) com sucesso", fichasCanceladas });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            try
+            {
+                // Totalizadores
+                var totalFichas = await _context.Fichas.CountAsync();
+                var fichasVendidas = await _context.Fichas.CountAsync(f => f.StatusFicha == "Vendido");
+                var fichasEmCadastro = await _context.Fichas.CountAsync(f => f.StatusFicha == "Em Cadastro");
+                var fichasEmAnalise = await _context.Fichas.CountAsync(f => f.StatusFicha == "Em Análise");
+                var fichasCanceladas = await _context.Fichas.CountAsync(f => f.StatusFicha == "Cancelado");
+
+                // Fichas por representante (Top 5)
+                var fichasPorRepresentante = await _context.Fichas
+                    .GroupBy(f => f.RepresentanteId)
+                    .Select(g => new
+                    {
+                        representanteId = g.Key,
+                        quantidade = g.Count(),
+                        vendidas = g.Count(f => f.StatusFicha == "Vendido")
+                    })
+                    .OrderByDescending(x => x.quantidade)
+                    .Take(5)
+                    .ToListAsync();
+
+                // Taxa de fechamento (vendidas / total)
+                var taxaFechamento = totalFichas > 0
+                    ? Math.Round((double)fichasVendidas / totalFichas * 100, 2)
+                    : 0;
+
+                // Valor total estimado
+                var valorTotalEstimado = await _context.Fichas
+                    .Where(f => f.ValorEstimado.HasValue)
+                    .SumAsync(f => f.ValorEstimado) ?? 0;
+
+                // Valor de fichas vendidas
+                var valorVendido = await _context.Fichas
+                    .Where(f => f.StatusFicha == "Vendido" && f.ValorEstimado.HasValue)
+                    .SumAsync(f => f.ValorEstimado) ?? 0;
+
+                // Distribuição por status
+                var porStatus = new
+                {
+                    emCadastro = fichasEmCadastro,
+                    emAnalise = fichasEmAnalise,
+                    vendido = fichasVendidas,
+                    cancelado = fichasCanceladas
+                };
+
+                var dashboard = new
+                {
+                    resumo = new
+                    {
+                        total = totalFichas,
+                        vendidas = fichasVendidas,
+                        emCadastro = fichasEmCadastro,
+                        emAnalise = fichasEmAnalise,
+                        canceladas = fichasCanceladas,
+                        taxaFechamento = taxaFechamento
+                    },
+                    financeiro = new
+                    {
+                        valorTotalEstimado = Math.Round(valorTotalEstimado, 2),
+                        valorVendido = Math.Round(valorVendido, 2),
+                        percentualVendido = totalFichas > 0 ? Math.Round((double)fichasVendidas / totalFichas * 100, 2) : 0
+                    },
+                    topRepresentantes = fichasPorRepresentante,
+                    porStatus = porStatus
+                };
+
+                return Ok(dashboard);
             }
             catch (Exception ex)
             {
